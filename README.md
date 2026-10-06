@@ -31,12 +31,10 @@ follow it for you.
 
 Helm checks for a newer release at launch and offers to install it. It asks
 through `gh`, so the check needs the [GitHub CLI](https://cli.github.com/)
-installed and logged in (`gh auth login`). In Helm, open **Settings** (the
-gear, or Ctrl+,) and set **Update source** to:
-
-```
-MarkusVGJensen/helm-releases
-```
+installed and logged in (`gh auth login`). From 1.0.0 the check reads this
+repository by default. An older install points elsewhere: open **Settings**
+(the gear, or Ctrl+,) and set **Update source** to
+`MarkusVGJensen/helm-releases`.
 
 ## What Helm is
 
@@ -90,9 +88,15 @@ and two small config files carry that.
 
 The **Reviews** queue lists the open merge requests where you are a reviewer.
 **Start review** checks out the branch in its own worktree and starts
-`/flow:review-mr` on it, with a note of your own if you want to steer it. The
-comments are posted as drafts that nobody sees until you submit the review in
-GitLab.
+`/flow:review-mr` on it, with a note of your own if you want to steer it.
+
+Nothing reaches GitLab yet. When the review finishes, **Review comments**
+shows Claude's comments on the merge request's diff, each under the lines it
+is about, the way GitLab's own review does. Each has a severity from 1 (a
+nit) to 5 (must not merge as it is) that only you see, and the list beside
+the diff is sorted by it. Edit, delete, or add comments of your own by
+clicking a line, then **Post to GitLab** sends them as draft notes. Nobody
+sees them until you submit the review in GitLab.
 
 ### Around the edges
 

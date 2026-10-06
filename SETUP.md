@@ -107,7 +107,7 @@ opens it again later. Confirm the prefilled values and add:
   CMake project on Windows this is `cmd.exe` with one line:
   `/c call "<path to vcvars64.bat>" >nul && <configure script>`
 - **Editor**: pick one of the IDEs Helm found on the machine.
-- **Update source**: `MarkusVGJensen/helm-releases`
+- **Update source**: leave it at `MarkusVGJensen/helm-releases`
 - **First prompts**: leave the defaults unless you know why not.
 
 Settings live in `~/.helm/config.json`, tabs in `~/.helm/state.json`. For
