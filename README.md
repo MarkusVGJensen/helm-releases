@@ -24,8 +24,15 @@ Run the installer. It is not code-signed, so Windows SmartScreen may say it
 **macOS:** no build is published yet.
 
 Before Helm is useful you need Claude Code, git, glab and the `flow` plugin.
-[SETUP.md](SETUP.md) walks through all of it, and is written so Claude can
-follow it for you.
+[SETUP.md](SETUP.md) walks through all of it, Helm included, and is written
+for Claude to follow. With Claude Code installed, say:
+
+> Set up Helm on this machine by following
+> https://raw.githubusercontent.com/MarkusVGJensen/helm-releases/main/SETUP.md
+
+Claude installs the tools, the plugins and Helm, and writes the config. You
+log in to GitLab and GitHub when it asks, answer its questions about your
+project, and pick your editor in Helm's Settings at the end.
 
 ### Updates
 
