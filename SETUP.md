@@ -1,6 +1,6 @@
 # Setting up a machine for Helm
 
-From a Windows computer with Claude Code to the full workflow: Helm on top,
+From a Windows or macOS computer with Claude Code to the full workflow: Helm on top,
 the [`flow` plugin](https://github.com/MarkusVGJensen/flow) driving each
 session, and Anthropic's first-party plugins doing review and planning.
 
@@ -21,6 +21,10 @@ Do the steps in order. Each says who does it:
 Ask for every value you cannot work out from the machine or the project. Never
 invent a project path, a GitLab project or a build command. Skip a step whose
 result is already in place, and say that you did.
+
+The steps are written for Windows and PowerShell. **On a Mac**, follow
+[On a Mac](#on-a-mac) at the end wherever a step differs: the tools, the
+install and the paths.
 
 A tool installed in step 1 is not on this session's `PATH` until a new shell
 starts. Refresh it before using the tool:
@@ -211,6 +215,41 @@ The person checks, in Helm:
 3. The Reviews queue lists their assigned merge requests.
 4. **New issue**: paste a real issue link and start it. Expect a worktree,
    Claude stopping at the plan, and a **Plan** button that shows it.
+
+## On a Mac
+
+Everything not listed here is the same as on Windows, run in the default
+shell (zsh) instead of PowerShell; `~` is the home folder on both.
+
+- **Step 1, tools.** Install [Homebrew](https://brew.sh) first if `brew` is
+  missing; its installer asks for the person's password, so ask them to run
+  it. Then: `brew install node git glab gh`. There is no `PATH` to refresh.
+- **Step 3, flow.** `git clone https://github.com/MarkusVGJensen/flow ~/.claude/skills/flow`
+- **Step 4, plugins.** The same `claude plugin install` commands, one per
+  plugin:
+  `for p in pr-review-toolkit code-review feature-dev code-simplifier claude-md-management hookify; do claude plugin install "$p@claude-plugins-official" --scope user; done`
+- **Step 6, project values.** `worktreeRoot` is a short folder in the home
+  folder, such as `~/wt`, written out in full (`/Users/<name>/wt`).
+- **Step 7, install Helm.**
+
+  ```sh
+  url=$(curl -s https://api.github.com/repos/MarkusVGJensen/helm-releases/releases/latest \
+    | grep -o '"browser_download_url": *"[^"]*_universal\.dmg"' | cut -d'"' -f4)
+  curl -L -o /tmp/Helm.dmg "$url"
+  hdiutil attach -nobrowse -quiet /tmp/Helm.dmg -mountpoint /tmp/helm-dmg
+  ditto /tmp/helm-dmg/Helm.app /Applications/Helm.app
+  hdiutil detach -quiet /tmp/helm-dmg
+  xattr -dr com.apple.quarantine /Applications/Helm.app
+  ```
+
+  Helm is not notarized by Apple. The last line lets it open without the
+  "cannot be opened" warning; tell the person you ran it and why.
+- **Step 8, settings.** The same files, `~/.helm/config.json` and
+  `~/.helm/profiles/default.json`, with `/` paths. `configure` is whatever the
+  project needs before a build, often nothing; for a shell line, use
+  `{ "program": "/bin/zsh", "args": ["-lc", "<command>"] }`.
+- **Step 9, first launch.** Helm is in Applications and Launchpad. The
+  Editor list shows the IDEs Helm found, Xcode among them.
 
 ## Updates
 

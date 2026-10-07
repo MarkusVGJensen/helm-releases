@@ -6,7 +6,7 @@ Claude session in its own git worktree. Buttons either type a `/flow` command
 into that session or call GitLab and git directly, and every button says
 which, so you always know what costs tokens and what does not.
 
-This repository holds only the latest installer and these instructions. The
+This repository holds only the latest installers and these instructions. The
 source lives elsewhere.
 
 ## Download
@@ -21,7 +21,12 @@ gh release download --repo MarkusVGJensen/helm-releases --pattern "*setup.exe"
 Run the installer. It is not code-signed, so Windows SmartScreen may say it
 "protected your PC": choose **More info › Run anyway**.
 
-**macOS:** no build is published yet.
+**macOS (Apple Silicon and Intel):** from the same release, download
+`Helm_<version>_universal.dmg`, open it, and drag Helm into Applications. The
+app is not notarized by Apple, so the first launch is blocked: open **System
+Settings › Privacy & Security**, scroll to the message about Helm, and choose
+**Open Anyway**. The macOS build is new; if something does not work, the
+Diagnostics panel described below says what Helm found.
 
 Before Helm is useful you need Claude Code, git, glab and the `flow` plugin.
 [SETUP.md](SETUP.md) walks through all of it, Helm included, and is written
@@ -118,7 +123,7 @@ sees them until you submit the review in GitLab.
 
 ## Requirements
 
-- Windows 10 or 11, x64
+- Windows 10 or 11 (x64), or macOS on Apple Silicon or Intel
 - A Claude Code subscription or API access
 - A GitLab project, with `glab` logged in to it
 - git and Node.js 20+
