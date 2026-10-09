@@ -1,134 +1,132 @@
 # Helm
 
-A desktop app that wraps [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
-for issue-driven work on a GitLab project. One tab per issue, each tab a live
-Claude session in its own git worktree. Buttons either type a `/flow` command
-into that session or call GitLab and git directly, and every button says
-which, so you always know what costs tokens and what does not.
+A desktop app for issue-driven work with [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
+One tab per issue, each a live Claude session in its own git worktree, with
+the plan, the commits and the reviews one click away. Works with GitLab and
+GitHub, on Windows and macOS.
 
-This repository holds only the latest installers and these instructions. The
-source lives elsewhere.
+![Helm with a Hub tab, a plain session and an issue in the rail](helm.png)
 
-## Download
+Every button says what it costs: one tagged **claude** types into the
+session and spends tokens; every other tag (**git**, **glab**, **gh**,
+**file**, **editor**, **build**) runs on your machine and spends none.
 
-**Windows (x64):** open the [latest release](https://github.com/MarkusVGJensen/helm-releases/releases/latest)
-and download `Helm_<version>_x64-setup.exe`. Or, with the GitHub CLI:
+This repository holds the latest installers and these instructions.
 
+## What it does
+
+### Issues
+
+1. **New issue.** Paste an issue link or type its number. Helm shows the
+   worktree and branch it will create.
+2. **Start.** Helm makes the worktree and branch, runs your configure
+   command in the background, opens a Claude tab and types
+   `/flow:start-issue`.
+3. **Approve the plan.** Claude researches, plans and stops. **Plan** shows
+   the plan as a document with its diagrams drawn, a reply box and
+   **Approve plan**.
+4. **Watch it work.** Tests first, then the implementation, a fresh-context
+   review, the build and the formatter. The timeline above the terminal
+   shows the step it is on, and steps that were skipped show as done.
+5. **Approve the commits.** **Review commits** shows the branch commit by
+   commit. Mark lines and send your notes back as one message, or approve
+   and let Claude open the merge or pull request.
+6. **Clean up.** Once it is merged, **Refetch** offers to remove the
+   worktree, the branch and the tab.
+
+### Reviews
+
+The **Reviews** queue lists the merge or pull requests waiting on your
+review. **Start review** checks the branch out in its own worktree and
+starts a review on it, with a note of your own to steer it if you want one.
+
+Nothing is posted yet. **Review comments** shows Claude's comments on the
+diff, each under the lines it is about, with a severity from 1 (a nit) to 5
+(must not merge) that only you see. Edit, delete or add your own, then
+**Post** sends them as drafts: draft notes on GitLab, a pending review on
+GitHub. Nobody sees them until you submit the review.
+
+### Run Debug
+
+**Run** builds the branch of the tab you are on and starts the program you
+choose, without opening your IDE. The arrow beside it picks another target,
+builds only, or stops what is running. If the build fails, its output opens
+and **Send errors to Claude** hands the error lines to that tab's session.
+The build command and the targets are set per repository in Settings.
+
+### Around the edges
+
+- A status dot per tab: amber while Claude works, magenta when it wants an
+  answer, with one notification.
+- A **Hub** tab on the default branch for questions about the codebase,
+  plain sessions in any folder, and notes per tab.
+- CI status per merge or pull request in the rail.
+- Several repositories, each with its own settings and tabs, switched from
+  the name beside the logo.
+- **Diagnostics** at the foot of the rail says what Helm found on the
+  machine, with a Copy button.
+
+## How it fits together
+
+Helm is the window. The work happens in Claude Code, driven by the
+[`flow` plugin](https://github.com/MarkusVGJensen/flow), which uses
+Anthropic's own plugins for planning and review. What is particular to your
+project lives in its `CLAUDE.md` and a small config file, not in Helm.
+
+```mermaid
+flowchart LR
+  H["Helm<br/>tabs, buttons, views"] --> C["Claude Code<br/>one session per tab"]
+  C --> F["flow plugin<br/>issue and review chains"]
+  F --> P["First-party plugins<br/>planning, review lenses"]
+  H --> G["git<br/>worktrees, commits"]
+  H --> S["glab or gh<br/>issues, MRs or PRs, CI"]
 ```
-gh release download --repo MarkusVGJensen/helm-releases --pattern "*setup.exe"
-```
 
-Run the installer. It is not code-signed, so Windows SmartScreen may say it
-"protected your PC": choose **More info › Run anyway**.
+## Install
 
-**macOS (Apple Silicon and Intel):** from the same release, download
-`Helm_<version>_universal.dmg`, open it, and drag Helm into Applications. The
-app is not notarized by Apple, so the first launch is blocked: open **System
-Settings › Privacy & Security**, scroll to the message about Helm, and choose
-**Open Anyway**. The macOS build is new; if something does not work, the
-Diagnostics panel described below says what Helm found.
-
-Before Helm is useful you need Claude Code, git, glab and the `flow` plugin.
-[SETUP.md](SETUP.md) walks through all of it, Helm included, and is written
-for Claude to follow. With Claude Code installed, say:
+The easiest way is to let Claude set everything up. With Claude Code
+installed, say:
 
 > Set up Helm on this machine by following
 > https://raw.githubusercontent.com/MarkusVGJensen/helm-releases/main/SETUP.md
 
 Claude installs the tools, the plugins and Helm, and writes the config. You
-log in to GitLab and GitHub when it asks, answer its questions about your
-project, and pick your editor in Helm's Settings at the end.
+log in when it asks and answer its questions about your project.
+[SETUP.md](SETUP.md) is the same guide, readable by a person too.
 
-### Updates
+To install Helm by hand, open the
+[latest release](https://github.com/MarkusVGJensen/helm-releases/releases/latest):
 
-Helm checks for a newer release at launch and offers to install it. It asks
-through `gh`, so the check needs the [GitHub CLI](https://cli.github.com/)
-installed and logged in (`gh auth login`). From 1.0.0 the check reads this
-repository by default. An older install points elsewhere: open **Settings**
-(the gear, or Ctrl+,) and set **Update source** to
-`MarkusVGJensen/helm-releases`.
-
-## What Helm is
-
-Helm is the window. The work happens in Claude Code through the
-[`flow` plugin](https://github.com/MarkusVGJensen/flow), which takes an issue
-from worktree to merge request with two human gates, and reviews other
-people's merge requests with line-anchored draft comments. `flow` delegates
-to Anthropic's first-party plugins for planning, reviewing and simplifying.
-Nothing about a particular project lives in Helm: the project's `CLAUDE.md`
-and two small config files carry that.
-
-```
-┌─ Helm  my-project ▾ ┬─────────────────────────────────────────────────────────┐
-│ New issue           │ #128 Fix header layout   ● Needs input  Configured      │
-│ Session in folder…  │ Issue · MR !140 · Open in editor · Close tab            │
-│                     │ Setup › Plan › ■Plan › Tests › Implement › Review › …   │
-│                     ├─────────────────────────────────────────────────────────┤
-│ ● Hub               │                                                         │
-│ OTHER     + SESSION │   Claude Code session in D:\wt\128                      │
-│ ● Notes             │                                                         │
-│ ISSUES              │   (full terminal: type, scroll, answer gates)           │
-│ ● #128 Fix header…  │                                                         │
-│ ● #131 Retry uplo…  │                                                         │
-│ REVIEWS   2 waiting │                                                         │
-│ ● !137 Cache inva…  │                                                         │
-│ CLOSED              │                                                         │
-└─────────────────────┴─────────────────────────────────────────────────────────┘
-```
-
-### Issues
-
-1. **New issue.** Paste a GitLab issue link or type its number. Helm shows the
-   worktree and branch it will create.
-2. **Start.** Helm makes the worktree and branch, runs your configure command
-   in the background so the editor button works, opens a Claude tab and types
-   `/flow:start-issue <id> <your note>`.
-3. **Plan.** The plugin plans and stops for your approval. The **Plan** button
-   shows the plan as a document, diagrams drawn, with a reply box and an
-   **Approve plan** button.
-4. **Build.** Failing tests first, then the implementation, a self-review, the
-   build and the formatter. The timeline above the terminal says which step
-   it is on.
-5. **Review commits.** At the second gate, **Review commits** shows the
-   branch commit by commit with its diff. Mark lines, write notes, and send
-   them all back to the session as one message, or approve and let the
-   plugin open the merge request.
-6. **Done.** Once the merge request is merged, **Refetch** offers to remove
-   the worktree, branch and tab. Nothing is removed without a tick.
-
-### Reviews
-
-The **Reviews** queue lists the open merge requests where you are a reviewer.
-**Start review** checks out the branch in its own worktree and starts
-`/flow:review-mr` on it, with a note of your own if you want to steer it.
-
-Nothing reaches GitLab yet. When the review finishes, **Review comments**
-shows Claude's comments on the merge request's diff, each under the lines it
-is about, the way GitLab's own review does. Each has a severity from 1 (a
-nit) to 5 (must not merge as it is) that only you see, and the list beside
-the diff is sorted by it. Edit, delete, or add comments of your own by
-clicking a line, then **Post to GitLab** sends them as draft notes. Nobody
-sees them until you submit the review in GitLab.
-
-### Around the edges
-
-- A status dot per tab: amber while Claude works, magenta once it has sat
-  still long enough to want an answer, with one system notification.
-- A Hub tab on the default branch for questions about the codebase, plain
-  Claude sessions, and notes per tab.
-- CI status per merge request in the rail.
-- Several repositories, each with its own settings and tabs.
-- **Diagnostics** at the foot of the rail says what Helm found on this
-  machine, with a Copy button for whoever is helping you.
+- **Windows (x64):** download `Helm_<version>_x64-setup.exe` and run it. It
+  is not code-signed, so SmartScreen may say it "protected your PC": choose
+  **More info › Run anyway**.
+- **macOS (Apple Silicon and Intel):** download `Helm_<version>_universal.dmg`,
+  open it and drag Helm into Applications. It is not notarized, so the first
+  launch is blocked: open **System Settings › Privacy & Security** and
+  choose **Open Anyway** beside the message about Helm.
 
 ## Requirements
 
-- Windows 10 or 11 (x64), or macOS on Apple Silicon or Intel
-- A Claude Code subscription or API access
-- A GitLab project, with `glab` logged in to it
-- git and Node.js 20+
+- Windows 10 or 11 (x64), or macOS
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code), with a
+  subscription or API access
+- git and Node.js 20 or later
+- A GitLab project with [`glab`](https://gitlab.com/gitlab-org/cli) logged
+  in, or a GitHub repository with [`gh`](https://cli.github.com/) logged in
+- `gh` for Helm's update check, whichever server your project is on
+- The [`flow` plugin](https://github.com/MarkusVGJensen/flow), 0.4.0 or later
+
+## Updates
+
+Helm checks this repository for a newer release at launch and offers to
+install it, through `gh`. To update `flow`, use **Update flow** under
+Settings › Plugins.
+
+An install older than 1.0.0 looks for updates elsewhere: open **Settings**
+(the gear, or Ctrl+,) and set **Update source** to
+`MarkusVGJensen/helm-releases`.
 
 ## Getting help
 
-Open **Diagnostics** in Helm, press Copy, and send that along with what you
-were doing.
+Open **Diagnostics** in Helm, press **Copy**, and send that along with what
+you were doing.

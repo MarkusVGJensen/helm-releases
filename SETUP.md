@@ -19,7 +19,12 @@ Do the steps in order. Each says who does it:
   written as `! <command>`.
 
 Ask for every value you cannot work out from the machine or the project. Never
-invent a project path, a GitLab project or a build command. Skip a step whose
+invent a project path, a project on the server or a build command.
+
+First find out where the project's issues and merge or pull requests live:
+**GitLab** (gitlab.com or a company instance) or **GitHub** (github.com or
+Enterprise). `git remote get-url origin` in the project's checkout usually
+says; ask when it does not. Steps below that differ say so. Skip a step whose
 result is already in place, and say that you did.
 
 The steps are written for Windows and PowerShell. **On a Mac**, follow
@@ -39,10 +44,10 @@ Install what `Get-Command` cannot find:
 
 | Tool | Why | Install |
 | --- | --- | --- |
-| Node.js 20+ | the status hooks Helm installs | `winget install --id OpenJS.NodeJS.LTS -e` |
+| Node.js 20+ | the status hooks Helm runs | `winget install --id OpenJS.NodeJS.LTS -e` |
 | git | worktrees | `winget install --id Git.Git -e` |
-| glab | GitLab from Helm and the plugin | `winget install --id GLab.GLab -e` |
-| GitHub CLI | Helm's update check | `winget install --id GitHub.cli -e` |
+| GitHub CLI (`gh`) | Helm's update check, and a GitHub project | `winget install --id GitHub.cli -e` |
+| glab | a GitLab project, from Helm and the plugin. Skip for GitHub | `winget install --id GLab.GLab -e` |
 
 Add `--accept-source-agreements --accept-package-agreements` so `winget`
 does not stop to ask. Claude Code itself is already here, since you are
@@ -53,13 +58,14 @@ running in it.
 Ask the person to run these, one at a time, and to say when each is done:
 
 ```
-! glab auth login
 ! gh auth login
+! glab auth login
 ```
 
-For a GitLab instance other than gitlab.com, the first is
-`! glab auth login --hostname <host>`; ask which host. Check both afterwards
-with `glab auth status` and `gh auth status`.
+The second only for a GitLab project. For a GitLab instance other than
+gitlab.com it is `! glab auth login --hostname <host>`, and for GitHub
+Enterprise the first is `! gh auth login --hostname <host>`; ask which host.
+Check afterwards with `gh auth status` and, for GitLab, `glab auth status`.
 
 ## 3. The flow plugin (Claude)
 
@@ -70,6 +76,8 @@ git clone https://github.com/MarkusVGJensen/flow "$HOME\.claude\skills\flow"
 The path matters: Claude Code loads plugins placed under `~/.claude/skills/`,
 and that is how the `/flow:…` commands appear in every session. If the folder
 is already a clone, run `git -C "$HOME\.claude\skills\flow" pull` instead.
+Helm can do the same later: **Fetch flow** or **Update flow** under
+Settings › Plugins.
 
 ## 4. First-party plugins (Claude)
 
@@ -118,9 +126,9 @@ Ask for the main checkout of the project if you are not already in it. Copy
 `~/.claude/skills/flow/flow.config.example.json` to `~/.claude/flow.local.json`
 and fill in:
 
-- `forge`: `glab`
-- `project`: the GitLab path, `group/repo`. `git remote get-url origin` in
-  the checkout gives it.
+- `forge`: `glab` for GitLab, `gh` for GitHub
+- `project`: the path on the server, `group/repo` on GitLab or `owner/repo`
+  on GitHub. `git remote get-url origin` in the checkout gives it.
 - `defaultTarget`: the branch merge requests go into, usually `main` or
   `master`
 - `worktreeRoot`: a short folder such as `D:/wt`, because long paths hit
@@ -129,8 +137,9 @@ and fill in:
 - `verify.*`: the project's own syntax check, targeted test, full build and
   format commands. Read the project's `CLAUDE.md` and build scripts, propose
   them, and let the person correct them.
-- `review.floor`, `review.mute` and `ci.*`: keep the example's values unless
-  the person says otherwise.
+- `review.floor`, `review.mute`, `mr.*` and `ci.*`: keep the example's
+  values unless the person says otherwise. `mr.template` can point at the
+  team's merge request template, if it has one.
 
 If the project commits a shared `<repo>/.claude/flow.json`, most of this is
 already there; `flow.local.json` then only needs what differs for this
@@ -161,16 +170,20 @@ file exists already, change only these keys:
 {
   "repo": "D:\\path\\to\\main\\checkout",
   "worktreeRoot": "D:\\wt",
+  "forge": "gitlab",
   "project": "group/repo",
   "defaultTarget": "main",
   "branchPattern": "ab/{issue}-{slug}",
   "name": "my-project",
-  "configure": { "program": "", "args": [] }
+  "configure": { "program": "", "args": [] },
+  "build": { "program": "", "args": [] },
+  "runTargets": []
 }
 ```
 
 - `repo`, `worktreeRoot`, `project`, `defaultTarget` and `branchPattern`: the
   values from step 6, with backslashes in Windows paths.
+- `forge`: `gitlab` or `github`.
 - `name`: what the repository is called in Helm's switcher.
 - `configure`: what prepares a fresh worktree for the editor, run in each new
   worktree. Leave the program empty when the project needs nothing. Each
@@ -179,6 +192,12 @@ file exists already, change only these keys:
   `{ "program": "cmd.exe", "args": ["/c call \"<path to vcvars64.bat>\" >nul && <configure script>"] }`.
   Work it out from the project's build scripts and `CLAUDE.md`, and confirm
   it with the person.
+- `build` and `runTargets`: what **Run** in Helm's header builds and starts,
+  in the folder of the tab it is pressed in. `build` is one command like
+  `configure`; each run target is `{ "label": "App", "command": "<program> <args>" }`,
+  the program relative to the checkout or on `PATH`. Propose them from the
+  project's build scripts, or leave both empty and tell the person they can
+  fill them in later under Settings › Build and run.
 
 ## 9. First launch (the person)
 
@@ -201,18 +220,19 @@ Claude checks:
 
 - `claude plugin list` shows the plugins from step 4.
 - `~/.claude/skills/flow/.claude-plugin/plugin.json` exists.
-- `glab auth status` and `gh auth status` succeed.
+- `gh auth status` succeeds, and `glab auth status` for a GitLab project.
 - `~/.helm/config.json` has `repo`, `worktreeRoot` and `project` filled in.
 
 The person checks, in Helm:
 
-1. No warning banner at the top: `claude`, `node`, `git` and `glab` were
-   found, `glab` is logged in, and `flow` was found and is new enough. If
+1. No warning banner at the top: `claude`, `node`, `git` and `glab` or `gh`
+   were found and logged in, and `flow` was found and is new enough. If
    something is wrong and the banner does not say enough, **Diagnostics** at
    the foot of the rail does, with a Copy button.
 2. The Hub tab appears and its dot turns amber within a few seconds. Claude
    asks once whether to trust the worktree folder; answer it in the tab.
-3. The Reviews queue lists their assigned merge requests.
+3. The Reviews queue lists the merge or pull requests waiting on their
+   review.
 4. **New issue**: paste a real issue link and start it. Expect a worktree,
    Claude stopping at the plan, and a **Plan** button that shows it.
 
@@ -223,7 +243,8 @@ shell (zsh) instead of PowerShell; `~` is the home folder on both.
 
 - **Step 1, tools.** Install [Homebrew](https://brew.sh) first if `brew` is
   missing; its installer asks for the person's password, so ask them to run
-  it. Then: `brew install node git glab gh`. There is no `PATH` to refresh.
+  it. Then: `brew install node git gh`, and `brew install glab` for a GitLab
+  project. There is no `PATH` to refresh.
 - **Step 3, flow.** `git clone https://github.com/MarkusVGJensen/flow ~/.claude/skills/flow`
 - **Step 4, plugins.** The same `claude plugin install` commands, one per
   plugin:
