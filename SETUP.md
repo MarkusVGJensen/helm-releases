@@ -77,7 +77,7 @@ The path matters: Claude Code loads plugins placed under `~/.claude/skills/`,
 and that is how the `/flow:…` commands appear in every session. If the folder
 is already a clone, run `git -C "$HOME\.claude\skills\flow" pull` instead.
 Helm can do the same later: **Fetch flow** or **Update flow** under
-Settings › Plugins.
+Settings › Updates.
 
 ## 4. First-party plugins (Claude)
 
@@ -275,5 +275,6 @@ shell (zsh) instead of PowerShell; `~` is the home folder on both.
 ## Updates
 
 Helm checks this repository for a newer release at launch, through `gh`, and
-offers to install it. To update `flow`, use **Update flow** in Helm's
-Settings, or `git -C ~/.claude/skills/flow pull`.
+offers to install it. Settings › Updates shows the installed Helm and `flow`
+and checks for both on request, with **Install** for Helm and **Update flow**
+for `flow`; `git -C ~/.claude/skills/flow pull` works too.

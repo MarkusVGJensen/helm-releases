@@ -119,8 +119,10 @@ To install Helm by hand, open the
 ## Updates
 
 Helm checks this repository for a newer release at launch and offers to
-install it, through `gh`. To update `flow`, use **Update flow** under
-Settings › Plugins.
+install it, through `gh`. To look at any other time, open **Settings** (the
+gear, or Ctrl+,): the **Updates** section at the top shows which Helm and
+which `flow` you have, with **Check for updates**, and **Install** or
+**Update flow** when something newer is out.
 
 An install older than 1.0.0 looks for updates elsewhere: open **Settings**
 (the gear, or Ctrl+,) and set **Update source** to
